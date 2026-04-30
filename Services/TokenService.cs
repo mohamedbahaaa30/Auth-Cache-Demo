@@ -43,7 +43,6 @@ namespace AuthDemo.Services
             var tokenHandler = new JwtSecurityTokenHandler();
             return tokenHandler.WriteToken(token);
         }
-
         public RefreshToken GenerateRefreshToken()
         {
             return new RefreshToken
@@ -53,5 +52,6 @@ namespace AuthDemo.Services
                 Expiration = DateTime.UtcNow.AddDays(7)
             };
         }
+        
     }
 }

@@ -1,7 +1,9 @@
 ﻿using AuthDemo.Dtos;
 using AuthDemo.Models;
+using AuthDemo.Services;
 using AuthDemo.Services.Interfaces;
 using AuthDemo.Sevices.Interfaces;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -12,11 +14,13 @@ namespace AuthDemo.Sevices
         private readonly Data.AppContext _context;
         private readonly SignInManager<AppUser> _signInManager;
         private readonly ITokenService _tokenService;
-        public AuthService(Data.AppContext context , SignInManager<AppUser> signInManager , ITokenService tokenService)          
+        private readonly ICacheService _cacheService;
+        public AuthService(Data.AppContext context , SignInManager<AppUser> signInManager , ITokenService tokenService, ICacheService cacheService)          
         {
             _context = context;
             _signInManager = signInManager;
             _tokenService = tokenService;
+            _cacheService = cacheService;
          }
         public async Task<LoginResponseDto> LoginAsync(string email, string password)
         {
@@ -94,6 +98,21 @@ namespace AuthDemo.Sevices
                 throw new UnauthorizedAccessException("Invalid token");
 
             token.IsRevoked = true;
+        }
+                
+        public async Task<bool> BlacklistAccessTokenAsync(HttpContext httpContext)
+        {
+            //blacklist the access token 
+            var jti = httpContext.User.Claims.FirstOrDefault(c => c.Type == "jti")?.Value;
+            var exp = httpContext.User.Claims.FirstOrDefault(c => c.Type == "exp")?.Value;
+            if (string.IsNullOrEmpty(jti) || string.IsNullOrEmpty(exp))
+                return false;
+            //cast exp to long and calculate the expiration time
+            var expTime = DateTimeOffset.FromUnixTimeSeconds(long.Parse(exp));
+
+            if (!string.IsNullOrEmpty(jti))
+                await _cacheService.SetDataAsync($"auth:blacklist:{jti}", jti, expTime);
+            return true;
         }
     }
 }

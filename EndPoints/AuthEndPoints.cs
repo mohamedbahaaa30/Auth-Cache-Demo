@@ -1,4 +1,6 @@
 ﻿using AuthDemo.Dtos;
+using AuthDemo.Services;
+using AuthDemo.Services.Interfaces;
 using AuthDemo.Sevices.Interfaces;
 using Azure;
 
@@ -13,7 +15,7 @@ namespace AuthDemo.EndPoints
 
             group.MapPost("/register", Register).AddValidation<RegisterDto>();
             group.MapPost("/login", Login).AddValidation<LoginDto>();
-            group.MapPost("/logout", Logout);
+            group.MapPost("/logout", Logout).RequireAuthorization();
             group.MapPost("/refresh-token", RefreshToken);
         }
         public static async Task<IResult> Register(RegisterDto registerDto,IAuthService _authService)
@@ -46,18 +48,16 @@ namespace AuthDemo.EndPoints
                 accessTokenExpiration = res.AccessTokenExpiration
             });
         }
-        public static async Task<IResult> Logout(IAuthService _authService, HttpContext httpContext)
-        {
-             
+        public static async Task<IResult> Logout(IAuthService _authService, HttpContext httpContext,ICacheService _cacheService)
+        {  
             var refreshToken = httpContext.Request.Cookies["refreshToken"];
             if (!string.IsNullOrEmpty(refreshToken))
                 await _authService.RevokeTokenAsync(refreshToken);
-
             httpContext.Response.Cookies.Delete("refreshToken");
-
+            // Blacklist the access token
+            await _authService.BlacklistAccessTokenAsync(httpContext);
             return Results.Ok("user logged out successfully");
         }
-
         public static async Task<IResult> RefreshToken(IAuthService _authService, HttpContext httpContext)
         {
             var refreshToken = httpContext.Request.Cookies["refreshToken"];

@@ -35,6 +35,14 @@ namespace AuthDemo
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<ITokenService, TokenService>();
 
+            //register the cache service
+            builder.Services.AddStackExchangeRedisCache(options =>
+            {
+                options.Configuration = builder.Configuration.GetSection("Redis:Configuration").Value;
+            });
+            builder.Services.AddScoped<ICacheService, CacheService>();
+
+
             //jwt configuration
             builder.Services.AddAuthentication(options =>
             {
@@ -69,6 +77,7 @@ namespace AuthDemo
             app.UseHttpsRedirection();
 
             app.UseAuthentication();
+            app.UseTokenBlackList();
             app.UseAuthorization();
             app.MapAuthEndPoints();
 

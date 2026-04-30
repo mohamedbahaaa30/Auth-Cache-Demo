@@ -8,5 +8,6 @@ namespace AuthDemo.Sevices.Interfaces
         Task<LoginResponseDto> LoginAsync(string email, string password);
         Task<RefreshTokenResponseDto> RefreshTokenAsync(string refreshToken);
         Task RevokeTokenAsync(string refreshToken);
+        Task<bool> BlacklistAccessTokenAsync(HttpContext httpContext);
     }
 }
