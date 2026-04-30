@@ -110,9 +110,8 @@ namespace AuthDemo.Sevices
             //cast exp to long and calculate the expiration time
             var expTime = DateTimeOffset.FromUnixTimeSeconds(long.Parse(exp));
 
-            if (!string.IsNullOrEmpty(jti))
-                await _cacheService.SetDataAsync($"auth:blacklist:{jti}", jti, expTime);
-            return true;
+            bool IsSuccess =  await _cacheService.SetDataAsync($"auth:blacklist:{jti}", jti, expTime);
+            return IsSuccess;
         }
     }
 }

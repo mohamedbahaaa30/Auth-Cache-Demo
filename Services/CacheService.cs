@@ -32,13 +32,21 @@ namespace AuthDemo.Services
 
         public async Task<bool> SetDataAsync<T>(string key, T value, DateTimeOffset expiration)
         {
-            var expireTime = expiration.Subtract(DateTimeOffset.UtcNow);
-            DistributedCacheEntryOptions options = new DistributedCacheEntryOptions
+            try
             {
-                AbsoluteExpirationRelativeToNow = expireTime
-            };
-            await _distributedCache.SetStringAsync(key, JsonSerializer.Serialize(value), options);
-            return true;
+                var expireTime = expiration.Subtract(DateTimeOffset.UtcNow);
+                DistributedCacheEntryOptions options = new DistributedCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = expireTime
+                };
+                await _distributedCache.SetStringAsync(key, JsonSerializer.Serialize(value), options);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+            
         }
     }
 }

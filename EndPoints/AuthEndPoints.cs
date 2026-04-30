@@ -55,7 +55,8 @@ namespace AuthDemo.EndPoints
                 await _authService.RevokeTokenAsync(refreshToken);
             httpContext.Response.Cookies.Delete("refreshToken");
             // Blacklist the access token
-            await _authService.BlacklistAccessTokenAsync(httpContext);
+            var IsSuccess = await _authService.BlacklistAccessTokenAsync(httpContext);
+            return IsSuccess ? Results.Ok("user logged out successfully") : Results.Ok("user logged out successfully - with minor warning");
             return Results.Ok("user logged out successfully");
         }
         public static async Task<IResult> RefreshToken(IAuthService _authService, HttpContext httpContext)
